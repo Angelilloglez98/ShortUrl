@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+    nginx:
+        build:
+            context: .
+            dockerfile: Dockerfile-nginx
+        volumes:
+            - ./symfony/:/var/www/symfony/
+        ports:
+            - 8000:80
+        networks:
+            - symfony
+        depends_on:
+            - php
+    php:
+        build:
+            context: .
+            dockerfile: Dockerfile-php
+        environment:
+            APP_ENV: dev
+        volumes:
+            - ./symfony/:/var/www/symfony/
+        networks:
+            - symfony
+        depends_on:
+            - db
+    db:
+      image: postgres
+      restart: always
+      ports:
+        - 5432:5432
+      environment:
+        POSTGRES_USER: dbuser
+        POSTGRES_PASSWORD: password1
+        POSTGRES_DB: database
+      networks:
+        - symfony
+      volumes:
+        - db_data:/var/lib/postgresql/data
+    adminer:
+      image: adminer
+      restart: always
+      ports:
+        - 8080:8080
+      depends_on:
+        - db
+      networks:
+        - symfony
+volumes:
+  db_data:
+
+networks:
+    symfony:
+      driver: bridge
